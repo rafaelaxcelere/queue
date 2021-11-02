@@ -87,7 +87,6 @@ class QueueJobBatch(models.Model):
             })
         return True
 
-    @api.multi
     def set_read(self):
         res = self.write({'is_read': True})
         notifications = []

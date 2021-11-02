@@ -8,7 +8,6 @@ class QueueJob(models.Model):
     """ Job status and result """
     _inherit = 'queue.job'
 
-    @api.multi
     def _related_action_attachment(self):
         res_id = self.kwargs.get('att_id')
         action = {

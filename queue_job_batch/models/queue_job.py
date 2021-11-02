@@ -22,7 +22,6 @@ class QueueJob(models.Model):
             })
         return super().create(vals)
 
-    @api.multi
     def write(self, vals):
         batches = self.env['queue.job.batch']
         for record in self:

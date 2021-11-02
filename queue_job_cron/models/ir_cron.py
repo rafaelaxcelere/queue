@@ -27,7 +27,6 @@ class IrCron(models.Model):
     def _run_job_as_queue_job(self, server_action):
         return server_action.run()
 
-    @api.multi
     def method_direct_trigger(self):
         self.check_access_rights('write')
         if self.run_as_queue_job:

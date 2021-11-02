@@ -113,7 +113,6 @@ class QueueJob(models.Model):
     identity_key = fields.Char(readonly=True)
     worker_pid = fields.Integer(readonly=True)
 
-    @api.model_cr
     def init(self):
         self._cr.execute(
             'SELECT indexname FROM pg_indexes WHERE indexname = %s ',
@@ -176,7 +175,6 @@ class QueueJob(models.Model):
             )
         return result
 
-    @api.multi
     def open_related_action(self):
         """Open the related action associated to the job"""
         self.ensure_one()
@@ -186,7 +184,6 @@ class QueueJob(models.Model):
             raise exceptions.UserError(_('No action available for this job'))
         return action
 
-    @api.multi
     def _change_job_state(self, state, result=None):
         """Change the state of the `Job` object
 
@@ -205,19 +202,16 @@ class QueueJob(models.Model):
                 raise ValueError('State not supported: %s' % state)
             job_.store()
 
-    @api.multi
     def button_done(self):
         result = _('Manually set to done by %s') % self.env.user.name
         self._change_job_state(DONE, result=result)
         return True
 
-    @api.multi
     def button_cancelled(self):
         result = _('Cancelled by %s') % self.env.user.name
         self._change_job_state(CANCELLED, result=result)
         return True
 
-    @api.multi
     def requeue(self):
         self._change_job_state(PENDING)
         return True
@@ -246,7 +240,6 @@ class QueueJob(models.Model):
             domain.append(('company_id', 'child_of', companies.ids))
         return domain
 
-    @api.multi
     def _message_failed_job(self):
         """Return a message which will be posted on the job when it is failed.
 
@@ -336,7 +329,6 @@ class QueueJob(models.Model):
         ))
         return stuck_jobs
 
-    @api.multi
     def related_action_open_record(self):
         """Open a form view with the record(s) of the job.
 
@@ -390,7 +382,6 @@ class RequeueJob(models.TransientModel):
                                string='Jobs',
                                default=_default_job_ids)
 
-    @api.multi
     def requeue(self):
         jobs = self.job_ids
         jobs.requeue()
@@ -402,7 +393,6 @@ class SetJobsToDone(models.TransientModel):
     _name = 'queue.jobs.to.done'
     _description = 'Set all selected jobs to done'
 
-    @api.multi
     def set_done(self):
         jobs = self.job_ids
         jobs.button_done()
@@ -414,7 +404,6 @@ class SetJobsToCancelled(models.TransientModel):
     _name = 'queue.jobs.to.cancelled'
     _description = 'Cancel all selected jobs'
 
-    @api.multi
     def set_cancelled(self):
         jobs = self.job_ids.filtered(
             lambda x: x.state in ('pending', 'failed', 'enqueued')
@@ -447,7 +436,6 @@ class JobChannel(models.Model):
          'Channel complete name must be unique'),
     ]
 
-    @api.multi
     @api.depends('name', 'parent_id.complete_name')
     def _compute_complete_name(self):
         for record in self:
@@ -460,7 +448,6 @@ class JobChannel(models.Model):
                 parts.append(channel.name)
             record.complete_name = '.'.join(reversed(parts))
 
-    @api.multi
     @api.constrains('parent_id', 'name')
     def parent_required(self):
         for record in self:
@@ -492,7 +479,6 @@ class JobChannel(models.Model):
         records |= super().create(vals_list)
         return records
 
-    @api.multi
     def write(self, values):
         for channel in self:
             if (not self.env.context.get('install_mode') and
@@ -501,14 +487,12 @@ class JobChannel(models.Model):
                 raise exceptions.Warning(_('Cannot change the root channel'))
         return super(JobChannel, self).write(values)
 
-    @api.multi
     def unlink(self):
         for channel in self:
             if channel.name == 'root':
                 raise exceptions.Warning(_('Cannot remove the root channel'))
         return super(JobChannel, self).unlink()
 
-    @api.multi
     def name_get(self):
         result = []
         for record in self:

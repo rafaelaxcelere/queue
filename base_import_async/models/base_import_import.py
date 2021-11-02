@@ -33,7 +33,6 @@ DEFAULT_CHUNK_SIZE = 100
 class BaseImportImport(models.TransientModel):
     _inherit = 'base_import.import'
 
-    @api.multi
     def do(self, fields, columns, options, dryrun=False):
         if dryrun or not options.get(OPT_USE_QUEUE):
             # normal import
